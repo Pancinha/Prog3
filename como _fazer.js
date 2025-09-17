@@ -90,3 +90,32 @@ try {
 } catch (erro) {
    console.error("Erro:", erro.message);
 }
+
+//VALIDAR SE EXISTE REGISTRO - API DEVOLDE UNDEFINED
+async function localizarId() {
+  const id = Number(await input({ message: 'Informe o ID: ' }));
+  const registro = await CrudAPI.lerPorId(id);
+
+  if (!registro) {  // se for undefined/null
+    console.log("Registro não encontrado!");
+    return;
+  }
+
+  console.log(`ID: ${registro.id}\nNome: ${registro.nome}\nE-mail: ${registro.email}`);
+}
+
+//QUANDO A API DEVOLVE UM ERRO
+async function excluirRegistro() {
+  const id = Number(await input({ message: 'Informe o ID: ' }));
+
+  try {
+    const removido = await CrudAPI.excluir(id);
+    console.log(`Registro excluído: ${removido.nome}`);
+  } catch (e) {
+    console.log("Erro:", e.message);
+  }
+}
+
+//Se pode vir undefined → use if (!variavel) { ... }.
+//Se pode lançar erro (throw) → use try { ... } catch (e) { ... }.
+//
