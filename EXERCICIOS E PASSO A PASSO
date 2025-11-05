@@ -1,0 +1,586 @@
+🥇 1. ENTENDA O ENUNCIADO
+
+👉 Antes de codar, lê com calma e procura as palavras mágicas.
+Essas palavras indicam o que vai virar estado (useState).
+
+💡 Palavras que sempre indicam estado:
+
+tentativas
+selecionado / virada / aberta / achada
+pontuação
+erro / mensagem
+senha / combinação
+cartas / teclas / letras / números
+
+🧩 Tudo que muda na tela = precisa estar num useState.
+👉 se aparece e depois some, muda de cor, muda número, texto → useState.
+
+
+🥈 2. MONTE O ESQUELETO DO COMPONENTE PRINCIPAL
+import { useState } from "react";
+
+export default function NomeDoJogo() {
+  // ESTADOS (tudo que muda)
+  const [tentativas, setTentativas] = useState(3);
+  const [mensagem, setMensagem] = useState("");
+  const [fim, setFim] = useState(false);
+  
+  // DADOS INICIAIS (array)
+  const cartas = [
+    { id: 1, nome: "Maçã" },
+    { id: 2, nome: "Banana" },
+  ];
+
+  return (
+    <div>
+      <h1>Título do jogo</h1>
+      <p>Tentativas: {tentativas}</p>
+    </div>
+  );
+}
+
+
+🥉 3. SE TEM LISTA DE COISAS (CARTAS, BOTÕES, TECLAS)
+
+Cria um array (ex: cartas, teclas, botoes) e renderiza ele com .map().
+
+Modelinho universal do map:
+{lista.map((item, index) => (
+  <button key={index} onClick={() => funcao(index)}>
+    {item.nome}
+  </button>
+))}
+
+
+🧱 4. SEMPRE PRECISA DE UMA FUNÇÃO PARA O CLIQUE (onClick)
+
+Tudo no React interativo é clique.
+
+Modelinho:
+function clicar(index) {
+  console.log("Clicou na posição", index);
+}
+DEPOIS LIGA ELA
+<button onClick={() => clicar(index)}>Clique</button>
+
+
+🧩 5. MONTA A LÓGICA DO JOGO / REGRAS
+
+Depende do enunciado, mas quase sempre é isso:
+
+Tipo de jogo	O que fazer no clique	O que comparar / alterar
+Cofre	mudar número da posição	comparar com senha
+Jogo 21	virar carta	somar valor e checar 21
+Memória	selecionar carta	comparar id das cartas
+Forca	clicar letra	checar se letra existe na palavra
+Calculadora	clicar número/op	montar expressão e usar eval
+
+💡 Dica: sempre que precisar “comparar dois cliques”, usa dois estados:
+const [selA, setSelA] = useState(null);
+const [selB, setSelB] = useState(null);
+
+Depois:
+if (selA !== null && selB !== null) {
+  validar(selA, selB);
+}
+
+
+💡 6. MONTE A FUNÇÃO DE VALIDAÇÃO / RESULTADO
+
+Essa função checa se o jogador acertou, errou, ganhou ou perdeu.
+
+
+function validar() {
+  if (pontuacao === 21) {
+    setMensagem("Parabéns, você ganhou!");
+    setFim(true);
+  } else if (pontuacao > 21) {
+    setMensagem("Você perdeu!");
+    setFim(true);
+  }
+}
+
+OUTRO CASO
+
+function validar(idA, idB) {
+  if (cartasA[idA].id === cartasB[idB].id) {
+    setMensagem("Acertou!");
+  } else {
+    setMensagem("Errou!");
+    setTentativas(t => t - 1);
+  }
+}
+
+
+🔁 9. SE TIVER “TENTAR NOVAMENTE” OU “REINICIAR”
+
+Faz uma função pra resetar tudo:
+
+function reiniciar() {
+  setTentativas(5);
+  setMensagem("");
+  setFim(false);
+}
+
+E cria um botão pra isso:
+
+<button onClick={reiniciar}>Tentar Novamente</button>
+
+
+
+🚀 FRASES-CHAVE PRA LEMBRAR NA PROVA
+
+“Tudo que muda na tela → useState.”
+“Tudo que aparece várias vezes → array + map.”
+“Tudo que reage ao clique → onClick.”
+“Tudo que precisa comparar → função validar().”
+“Tudo que tem fim de jogo → flag fim = true.”
+
+💬 Resumo final:
+
+1️⃣ Identifica o que vai mudar (cria os useState)
+2️⃣ Cria o layout básico (return)
+3️⃣ Mostra listas com .map()
+4️⃣ Cria as funções de clique
+5️⃣ Faz a regra de validação
+6️⃣ Mostra as mensagens
+7️⃣ Testa no navegador
+
+99999999999999999999999999999999999999999999999999999999999999999999999999999
+
+********* COFRE PROVA ANTIGA **********
+TECLA.JSX
+
+// Componente TECLA
+// O enunciado pede um componente que mostre um número (0..9) com dois botões
+// para decremento (-) e incremento (+), "dando a volta" (0 vai para 9 e 9 vai para 0).
+// Ele deve receber o valor atual e uma função onChange(newVal) do pai.
+
+export default function Tecla({ value, onChange }) {
+  // decrementa com wrap 0→9
+  function dec() {
+    const novo = value === 0 ? 9 : value - 1;
+    onChange(novo); // informa o pai que mudou
+  }
+
+  // incrementa com wrap 9→0
+  function inc() {
+    const novo = value === 9 ? 0 : value + 1;
+    onChange(novo); // informa o pai que mudou
+  }
+
+  return (
+    <div style={wrapper}>
+      <button onClick={dec} style={btn}>-</button>
+      <span style={visor}>{value}</span>
+      <button onClick={inc} style={btn}>+</button>
+    </div>
+  );
+}
+
+const wrapper = { display: "inline-flex", alignItems: "center", gap: 8, margin: 6 };
+const btn = { padding: "6px 10px", cursor: "pointer" };
+const visor = { minWidth: 16, textAlign: "center", fontWeight: "bold" };
+
+---------------------------------------------------------------------------------------
+
+// Componente COFRE
+// Enunciado-chave (o que ele quer checar):
+// - Receber uma senha por prop (string), ex: "1234"
+// - Criar uma Tecla para cada dígito da senha
+// - Estado com a combinação atual (começa tudo 0,0,0,0...)
+// - Botão "Abrir": se combinação === senha → "Cofre Aberto!", senão "Senha Errada!"
+// - Limitar tentativas a 3 e desabilitar o botão quando acabar
+
+import { useMemo, useState } from "react";
+import Tecla from "./Tecla";
+
+export default function Cofre({ senha }) {
+  // Transforma "1234" → [1,2,3,4]
+  const senhaNumerica = useMemo(
+    () => senha.split("").map(n => Number(n)),
+    [senha]
+  );
+
+  // combinação atual digitada pelo usuário (começa tudo 0)
+  const [comb, setComb] = useState(() => Array(senhaNumerica.length).fill(0));
+  const [tentativas, setTentativas] = useState(3);
+  const [msg, setMsg] = useState("");
+  const [aberto, setAberto] = useState(false); // se abriu, fim de jogo
+
+  function alterarPosicao(indice, novoValor) {
+    // atualiza comb na posição "indice" com "novoValor"
+    setComb(prev => {
+      const copia = [...prev];
+      copia[indice] = novoValor;
+      return copia;
+    });
+  }
+
+  function abrir() {
+    if (aberto || tentativas <= 0) return;
+
+    // compara comb com senhaNumerica
+    const ok = comb.every((v, i) => v === senhaNumerica[i]);
+    if (ok) {
+      setAberto(true);
+      setMsg("Cofre Aberto!");
+    } else {
+      const rest = tentativas - 1;
+      setTentativas(rest);
+      setMsg("Senha Errada!");
+    }
+  }
+
+  const esgotou = !aberto && tentativas === 0;
+
+  return (
+    <div style={box}>
+      <h2>Cofre</h2>
+
+      <div style={{ marginBottom: 8 }}>
+        {comb.map((valor, i) => (
+          <Tecla
+            key={i}
+            value={valor}
+            onChange={(novo) => alterarPosicao(i, novo)}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={abrir}
+        disabled={aberto || tentativas === 0}
+        style={{ padding: "8px 16px", cursor: (aberto || tentativas === 0) ? "not-allowed" : "pointer" }}
+      >
+        Abrir
+      </button>
+
+      <div style={{ marginTop: 8, minHeight: 20 }}>
+        {aberto && <strong style={{ color: "green" }}>{msg}</strong>}
+        {!aberto && tentativas < 3 && <span>{msg}</span>}
+      </div>
+
+      {!aberto && (
+        <p style={{ marginTop: 6 }}>Tentativas restantes: {tentativas}</p>
+      )}
+
+      {esgotou && <p style={{ color: "crimson" }}>Você usou todas as tentativas.</p>}
+    </div>
+  );
+}
+
+const box = { border: "1px solid #ddd", padding: 12, borderRadius: 8, maxWidth: 420 };
+
+############################################################################################
+
+************** Jogo 21 (Prova antiga) **********************
+Suposições coerentes com o enunciado
+
+Recebe tentativas, verso e listaCartas (cada carta tem {id, valor, img}).
+Cada clique vira uma carta e consome 1 tentativa.
+Se a soma == 21 → venceu, > 21 → perdeu, acabaram tentativas → “Terminou com X pontos”.
+Depois do fim do jogo, não pode virar mais cartas.
+
+CARTA.JSX
+// Exibe uma "carta": se virada, mostra a frente (img); senão, mostra o verso.
+// Desabilita clique se já virada ou se jogo acabou.
+export default function Carta({ virada, imgFrente, imgVerso, onVirar, desabilitada }) {
+  return (
+    <button
+      onClick={onVirar}
+      disabled={desabilitada || virada}
+      style={{
+        border: "1px solid #ccc",
+        borderRadius: 8,
+        padding: 0,
+        width: 100,
+        height: 140,
+        cursor: (desabilitada || virada) ? "not-allowed" : "pointer",
+        overflow: "hidden",
+      }}
+    >
+      <img
+        alt="carta"
+        src={virada ? imgFrente : imgVerso}
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    </button>
+  );
+}
+------------------------------------------------------------------------
+
+// Componente principal do jogo 21
+// Props pedidas: tentativas (nº de viradas permitidas), verso (img do verso), listaCartas (array de cartas {id, valor, img})
+
+import { useMemo, useState } from "react";
+import Carta from "./Carta";
+
+export default function JogoVinteUm({ tentativas, verso, listaCartas }) {
+  // embaralha as cartas para a partida
+  const baralho = useMemo(
+    () => [...listaCartas].sort(() => Math.random() - 0.5),
+    [listaCartas]
+  );
+
+  // viradas[i] = true/false
+  const [viradas, setViradas] = useState(() => Array(baralho.length).fill(false));
+  const [restantes, setRestantes] = useState(tentativas);
+  const [pontuacao, setPontuacao] = useState(0);
+  const [fim, setFim] = useState(null); // "win" | "lose" | "fimTentativas" | null
+
+  const jogoEncerrado = fim !== null;
+
+  function virarCarta(i) {
+    if (jogoEncerrado) return;
+    if (viradas[i]) return;           // não vira de novo a mesma
+    if (restantes <= 0) return;       // sem tentativas
+
+    const carta = baralho[i];
+    // consome tentativa
+    setRestantes((r) => r - 1);
+    // vira visualmente
+    setViradas((v) => {
+      const copia = [...v];
+      copia[i] = true;
+      return copia;
+    });
+
+    // atualiza pontuação
+    setPontuacao((p) => {
+      const novo = p + carta.valor;
+
+      // checa condições de término
+      if (novo === 21) {
+        setFim("win");
+      } else if (novo > 21) {
+        setFim("lose");
+      } else {
+        // se não acabou por pontuação, pode acabar por falta de tentativa
+        // (nota: usamos callback do setState para garantir ordem)
+        setRestantes((r) => {
+          if (r - 1 === 0 && novo < 21) {
+            setFim("fimTentativas");
+          }
+          return r; // não mexe aqui, pois já consumimos antes
+        });
+      }
+
+      return novo;
+    });
+  }
+
+  function mensagem() {
+    if (fim === "win") return "Parabéns você ganhou!";
+    if (fim === "lose") return "Você perdeu!";
+    if (fim === "fimTentativas") return `Você terminou com ${pontuacao} pontos!`;
+    return null;
+  }
+
+  return (
+    <div>
+      <h2>Jogo 21</h2>
+      <p>Tentativas restantes: {restantes}</p>
+      <p>Pontuação: {pontuacao}</p>
+
+      <div style={grid}>
+        {baralho.map((c, i) => (
+          <Carta
+            key={c.id}
+            virada={viradas[i]}
+            imgFrente={c.img}
+            imgVerso={verso}
+            desabilitada={jogoEncerrado}
+            onVirar={() => virarCarta(i)}
+          />
+        ))}
+      </div>
+
+      <div style={{ minHeight: 24, marginTop: 8 }}>
+        {mensagem() && <strong>{mensagem()}</strong>}
+      </div>
+    </div>
+  );
+}
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+  gap: 12,
+};
+
+-------------------------------------------------------------------------
+
+// Exemplo de integração exatamente como o enunciado sugere
+// (assume que você tem um Deck.js que exporta { verso, listaCartas })
+
+import { verso, listaCartas } from "./Deck";
+import JogoVinteUm from "./JogoVinteUm";
+
+export default function App() {
+  return (
+    <div style={{ padding: 16 }}>
+      <h1>Prova — Jogo 21</h1>
+      <JogoVinteUm tentativas={4} verso={verso} listaCartas={listaCartas} />
+    </div>
+  );
+}
+
+######################################################################
+CALCULADORA 
+
+import { useState } from "react";
+
+export default function Calculadora() {
+  // estado que guarda a expressão digitada (ex.: "12+3*4")
+  const [expr, setExpr] = useState("");
+
+  const botoes = [
+    "7","8","9","/",
+    "4","5","6","*",
+    "1","2","3","-",
+    "C","0","=","+",
+  ];
+
+  function clickBtn(btn) {
+    if (btn === "C") {
+      setExpr("");
+      return;
+    }
+    if (btn === "=") {
+      try {
+        const resultado = eval(expr);           // do enunciado
+        setExpr(String(resultado));
+      } catch {
+        setExpr(""); // se der erro de sintaxe, só limpa (simples)
+      }
+      return;
+    }
+    // caso comum: concatena número ou operador
+    setExpr((prev) => prev + btn);
+  }
+
+  return (
+    <div style={{ width: 260, margin: "20px auto" }}>
+      <h2>Calculadora</h2>
+      <input value={expr} readOnly style={{ width: "100%", height: 40, textAlign: "right", fontSize: 20, marginBottom: 8 }} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+        {botoes.map((b) => (
+          <button key={b} onClick={() => clickBtn(b)} style={{ height: 44, fontSize: 18 }}>
+            {b}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+###########################################################################
+JOGO DA FORCA
+
+// Mostra a palavra como botões/letras: se ainda não descoberta, mostra "-"
+
+export default function Forca({ palavra, letrasCertas }) {
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {palavra.split("").map((letra, i) => {
+        const visivel = letrasCertas.has(letra);
+        return (
+          <button key={i} disabled style={{ padding: "6px 10px" }}>
+            {visivel ? letra : "-"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+TECLADO.JSX
+const ALFABETO = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+export default function Teclado({ onPress, usados }) {
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+      {ALFABETO.map((l) => (
+        <button
+          key={l}
+          onClick={() => onPress(l)}
+          disabled={usados.has(l)}
+          style={{ padding: "6px 10px", cursor: usados.has(l) ? "not-allowed" : "pointer" }}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
+JOGODAFORCA.JSX
+import { useState } from "react";
+import Forca from "./Forca";
+import Teclado from "./Teclado";
+
+// Regras do enunciado (adaptadas):
+// - Recebe a palavra por prop
+// - Contabiliza erros; com >3 erros → "Você perdeu!"
+// - Se descobrir todas as letras → "Parabéns! Você ganhou!"
+// - Exibe tentativas erradas
+
+export default function JogoDaForca({ palavra }) {
+  const [certas, setCertas] = useState(new Set());
+  const [usadas, setUsadas] = useState(new Set());
+  const [erros, setErros] = useState(0);
+  const [fim, setFim] = useState(null); // "win" | "lose" | null
+
+  function apertar(letra) {
+    if (fim) return;
+    if (usadas.has(letra)) return;
+
+    setUsadas((u) => new Set(u).add(letra));
+
+    if (palavra.includes(letra)) {
+      const novo = new Set(certas).add(letra);
+      setCertas(novo);
+      const venceu = palavra.split("").every(ch => novo.has(ch));
+      if (venceu) setFim("win");
+    } else {
+      setErros((e) => {
+        const prox = e + 1;
+        if (prox > 3) setFim("lose");
+        return prox;
+      });
+    }
+  }
+
+  return (
+    <div>
+      <h2>Jogo da Forca</h2>
+      <Forca palavra={palavra} letrasCertas={certas} />
+      <p>Erros: {erros}</p>
+
+      {!fim && <Teclado onPress={apertar} usados={usadas} />}
+
+      <div style={{ marginTop: 8 }}>
+        {fim === "win" && <strong style={{ color: "green" }}>Parabéns! Você ganhou!</strong>}
+        {fim === "lose" && <strong style={{ color: "crimson" }}>Você perdeu!</strong>}
+      </div>
+    </div>
+  );
+}
+
+APP.JSX
+import JogoDaForca from "./JogoDaForca";
+
+export default function App() {
+  return (
+    <div style={{ padding: 16 }}>
+      <JogoDaForca palavra="REACT" />
+    </div>
+  );
+}
+
+
+
