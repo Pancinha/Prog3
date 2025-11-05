@@ -1,3 +1,20 @@
+# criar projeto React (com Vite)
+npm create vite@latest nome-do-projeto
+# escolhe → React + JavaScript
+cd nome-do-projeto
+
+# instalar dependências
+npm install
+
+# abrir VS Code
+code .
+
+# rodar o servidor
+npm run dev
+
+
+
+
 🥇 1. ENTENDA O ENUNCIADO
 
 👉 Antes de codar, lê com calma e procura as palavras mágicas.
