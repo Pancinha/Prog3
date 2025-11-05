@@ -1,0 +1,825 @@
+/**
+ * 📚 GUIA COMPLETO REACT - REFERÊNCIA RÁPIDA PARA PROVA
+ * 
+ * Este arquivo contém exemplos práticos de todos os conceitos essenciais de React
+ * organizados por tópico para consulta rápida durante estudos ou provas.
+ */
+
+// ============================================================================
+// 1️⃣ ESTRUTURA BÁSICA DE COMPONENTES
+// ============================================================================
+
+/**
+ * COMPONENTE SIMPLES
+ * - Função JavaScript com primeira letra MAIÚSCULA
+ * - Retorna JSX (HTML dentro do JavaScript)
+ */
+function ComponenteSimples() {
+  return (
+    <div>
+      <h1>Olá, sou um componente!</h1>
+    </div>
+  );
+}
+
+/**
+ * COMPONENTE COM PROPS (recebe dados do pai)
+ * Props = propriedades que vêm de componentes pais
+ */
+function Botao({ texto, cor }) {
+  return (
+    <button style={{ backgroundColor: cor }}>
+      {texto}
+    </button>
+  );
+}
+
+// Usando o componente:
+function App() {
+  return (
+    <div>
+      <Botao texto="Clique Aqui" cor="blue" />
+      <Botao texto="Cancelar" cor="red" />
+    </div>
+  );
+}
+
+/**
+ * REGRA DE OURO: 
+ * - Props DESCEM (pai → filho)
+ * - Eventos SOBEM (filho → pai através de funções)
+ */
+
+// ============================================================================
+// 2️⃣ useState - GERENCIANDO ESTADO
+// ============================================================================
+
+import { useState } from 'react';
+
+/**
+ * ESTADO COM NÚMERO
+ */
+function Contador() {
+  const [numero, setNumero] = useState(0);
+  
+  return (
+    <div>
+      <h1>Número: {numero}</h1>
+      <button onClick={() => setNumero(numero + 1)}>Aumentar</button>
+      <button onClick={() => setNumero(numero - 1)}>Diminuir</button>
+      <button onClick={() => setNumero(0)}>Zerar</button>
+    </div>
+  );
+}
+
+/**
+ * ESTADO COM TEXTO
+ */
+function InputTexto() {
+  const [nome, setNome] = useState("");
+  
+  return (
+    <div>
+      <input 
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        placeholder="Digite seu nome"
+      />
+      <p>Olá, {nome}!</p>
+    </div>
+  );
+}
+
+/**
+ * ESTADO COM BOOLEANO (true/false)
+ */
+function Interruptor() {
+  const [ligado, setLigado] = useState(false);
+  
+  return (
+    <div>
+      <p>Status: {ligado ? "Ligado" : "Desligado"}</p>
+      <button onClick={() => setLigado(!ligado)}>
+        {ligado ? "Desligar" : "Ligar"}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * ESTADO COM ARRAY
+ */
+function ListaTarefas() {
+  const [tarefas, setTarefas] = useState([
+    { id: 1, texto: "Estudar React", completa: false },
+    { id: 2, texto: "Fazer exercícios", completa: false }
+  ]);
+  
+  // Adicionar nova tarefa
+  function adicionarTarefa(texto) {
+    const novaTarefa = {
+      id: Date.now(),
+      texto: texto,
+      completa: false
+    };
+    setTarefas([...tarefas, novaTarefa]);
+  }
+  
+  // Marcar tarefa como completa
+  function completarTarefa(id) {
+    const novasTarefas = tarefas.map(tarefa => {
+      if (tarefa.id === id) {
+        return { ...tarefa, completa: true };
+      }
+      return tarefa;
+    });
+    setTarefas(novasTarefas);
+  }
+  
+  // Remover tarefa
+  function removerTarefa(id) {
+    const novasTarefas = tarefas.filter(tarefa => tarefa.id !== id);
+    setTarefas(novasTarefas);
+  }
+  
+  return (
+    <div>
+      {tarefas.map(tarefa => (
+        <div key={tarefa.id}>
+          <input 
+            type="checkbox" 
+            checked={tarefa.completa}
+            onChange={() => completarTarefa(tarefa.id)}
+          />
+          <span style={{ textDecoration: tarefa.completa ? "line-through" : "none" }}>
+            {tarefa.texto}
+          </span>
+          <button onClick={() => removerTarefa(tarefa.id)}>X</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * ESTADO COM OBJETO
+ */
+function Jogo() {
+  const [estado, setEstado] = useState({
+    pontos: 0,
+    tentativas: 5,
+    ganhou: false
+  });
+  
+  // Atualizar UMA propriedade do objeto
+  function ganharPontos(quantidade) {
+    setEstado({ ...estado, pontos: estado.pontos + quantidade });
+  }
+  
+  function usarTentativa() {
+    setEstado({ ...estado, tentativas: estado.tentativas - 1 });
+  }
+  
+  return (
+    <div>
+      <p>Pontos: {estado.pontos}</p>
+      <p>Tentativas: {estado.tentativas}</p>
+      <button onClick={() => ganharPontos(10)}>+10 pontos</button>
+      <button onClick={usarTentativa}>Usar tentativa</button>
+    </div>
+  );
+}
+
+/**
+ * ⚠️ REGRA IMPORTANTE: NUNCA modifique estado diretamente!
+ */
+// ❌ ERRADO:
+// array[0] = novoValor;
+// objeto.propriedade = novoValor;
+
+// ✅ CERTO:
+// setArray([...array]);
+// setObjeto({ ...objeto, propriedade: novoValor });
+
+// ============================================================================
+// 3️⃣ COMUNICAÇÃO ENTRE COMPONENTES (Filho → Pai)
+// ============================================================================
+
+/**
+ * PADRÃO: Filho chama função do Pai
+ */
+
+// COMPONENTE FILHO
+function BotaoContador({ valor, onMudar }) {
+  return (
+    <div>
+      <button onClick={() => onMudar(valor - 1)}>-</button>
+      <span>{valor}</span>
+      <button onClick={() => onMudar(valor + 1)}>+</button>
+    </div>
+  );
+}
+
+// COMPONENTE PAI
+function ContadorPai() {
+  const [numero, setNumero] = useState(0);
+  
+  function handleMudanca(novoValor) {
+    // Garante que fica entre 0-10
+    if (novoValor < 0) novoValor = 0;
+    if (novoValor > 10) novoValor = 10;
+    setNumero(novoValor);
+  }
+  
+  return (
+    <div>
+      <h1>Contador Principal: {numero}</h1>
+      <BotaoContador valor={numero} onMudar={handleMudanca} />
+    </div>
+  );
+}
+
+/**
+ * EXEMPLO COMPLEXO: Múltiplos filhos controlados pelo pai
+ */
+
+// FILHO: Tecla individual
+function Tecla({ valor, onIncremento, onDecremento }) {
+  return (
+    <div style={{ display: "inline-block", margin: "10px" }}>
+      <button onClick={onDecremento}>-</button>
+      <span style={{ margin: "0 10px", fontSize: "24px" }}>{valor}</span>
+      <button onClick={onIncremento}>+</button>
+    </div>
+  );
+}
+
+// PAI: Cofre com múltiplas teclas
+function Cofre({ senha }) {
+  const [combinacao, setCombinacao] = useState(senha.split("").map(() => 0));
+  const [tentativas, setTentativas] = useState(3);
+  const [aberto, setAberto] = useState(false);
+  
+  function mudarDigito(indice, operacao) {
+    const nova = [...combinacao];
+    
+    if (operacao === "incrementar") {
+      nova[indice] = nova[indice] === 9 ? 0 : nova[indice] + 1;
+    } else {
+      nova[indice] = nova[indice] === 0 ? 9 : nova[indice] - 1;
+    }
+    
+    setCombinacao(nova);
+  }
+  
+  function tentarAbrir() {
+    const senhaDigitada = combinacao.join("");
+    
+    if (senhaDigitada === senha) {
+      setAberto(true);
+    } else {
+      setTentativas(tentativas - 1);
+    }
+  }
+  
+  return (
+    <div>
+      <h1>Cofre</h1>
+      {combinacao.map((digito, indice) => (
+        <Tecla
+          key={indice}
+          valor={digito}
+          onIncremento={() => mudarDigito(indice, "incrementar")}
+          onDecremento={() => mudarDigito(indice, "decrementar")}
+        />
+      ))}
+      <br />
+      <button onClick={tentarAbrir} disabled={tentativas === 0 || aberto}>
+        Abrir Cofre
+      </button>
+      {aberto && <p>✅ Cofre Aberto!</p>}
+      {tentativas === 0 && !aberto && <p>❌ Sem tentativas!</p>}
+    </div>
+  );
+}
+
+// ============================================================================
+// 4️⃣ EVENTOS E MANIPULAÇÃO DE BOTÕES
+// ============================================================================
+
+/**
+ * onClick - Evento de Clique
+ */
+function ExemplosOnClick() {
+  // Forma 1: Função inline
+  const exemplo1 = <button onClick={() => alert("Clicou!")}>Clique</button>;
+  
+  // Forma 2: Função declarada
+  function handleClick() {
+    alert("Clicou!");
+  }
+  const exemplo2 = <button onClick={handleClick}>Clique</button>;
+  
+  // ⚠️ CUIDADO: NÃO coloque () na função!
+  // onClick={handleClick()}  // ❌ ERRADO - executa imediatamente
+  // onClick={handleClick}    // ✅ CERTO - passa referência
+}
+
+/**
+ * DESABILITAR BOTÃO
+ */
+function BotaoCondicional() {
+  const [tentativas, setTentativas] = useState(3);
+  
+  return (
+    <button 
+      disabled={tentativas === 0}
+      onClick={() => setTentativas(tentativas - 1)}
+    >
+      Tentar ({tentativas} restantes)
+    </button>
+  );
+}
+
+/**
+ * ESTILIZAÇÃO CONDICIONAL
+ */
+function CartaEstilizada({ selecionada, achada, nome }) {
+  return (
+    <button
+      style={{
+        border: selecionada ? "3px solid red" : "1px solid black",
+        backgroundColor: achada ? "green" : "white",
+        padding: "20px",
+        fontSize: "20px",
+        cursor: achada ? "not-allowed" : "pointer"
+      }}
+    >
+      {selecionada || achada ? nome : "*"}
+    </button>
+  );
+}
+
+/**
+ * USANDO CLASSES CSS CONDICIONAIS
+ */
+function BotaoComClasse({ ativo }) {
+  return (
+    <button className={ativo ? "botao-ativo" : "botao-inativo"}>
+      Botão
+    </button>
+  );
+}
+
+// ============================================================================
+// 5️⃣ LISTAS E ARRAYS
+// ============================================================================
+
+/**
+ * RENDERIZAR LISTA SIMPLES
+ */
+function ListaFrutas() {
+  const frutas = ["Maçã", "Banana", "Laranja", "Uva"];
+  
+  return (
+    <ul>
+      {frutas.map((fruta, indice) => (
+        <li key={indice}>{fruta}</li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * RENDERIZAR LISTA DE OBJETOS
+ */
+function ListaCartas() {
+  const cartas = [
+    { id: 1, nome: "Ás", valor: 11 },
+    { id: 2, nome: "Rei", valor: 10 },
+    { id: 3, nome: "Dama", valor: 10 }
+  ];
+  
+  return (
+    <div>
+      {cartas.map(carta => (
+        <div key={carta.id}>
+          {carta.nome} - {carta.valor} pontos
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * ⚠️ SEMPRE use key única! Prefira id em vez de índice.
+ */
+
+/**
+ * FUNÇÕES ÚTEIS COM ARRAYS
+ */
+
+// 1. Embaralhar array
+function embaralhar(array) {
+  const novo = [...array];
+  for (let i = novo.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [novo[i], novo[j]] = [novo[j], novo[i]];
+  }
+  return novo;
+}
+
+// 2. Verificar se TODOS são verdadeiros
+function exemploEvery() {
+  const cartas = [
+    { achada: true },
+    { achada: true },
+    { achada: false }
+  ];
+  const todasAchadas = cartas.every(carta => carta.achada === true);
+  // todasAchadas = false
+}
+
+// 3. Filtrar array
+function exemploFilter() {
+  const numeros = [1, 2, 3, 4, 5, 6];
+  const pares = numeros.filter(num => num % 2 === 0);
+  // pares = [2, 4, 6]
+}
+
+// 4. Somar valores
+function exemploReduce() {
+  const cartas = [
+    { valor: 10 },
+    { valor: 5 },
+    { valor: 3 }
+  ];
+  const total = cartas.reduce((soma, carta) => soma + carta.valor, 0);
+  // total = 18
+}
+
+// 5. Transformar array
+function exemploMap() {
+  const numeros = [1, 2, 3];
+  const dobrados = numeros.map(num => num * 2);
+  // dobrados = [2, 4, 6]
+}
+
+// ============================================================================
+// 6️⃣ EXEMPLOS COMPLETOS DE JOGOS
+// ============================================================================
+
+/**
+ * 🎮 JOGO DA MEMÓRIA COMPLETO
+ */
+function JogoMemoriaCompleto() {
+  // Dados iniciais
+  const cartasIniciais = [
+    { id: 1, nome: "🐶" },
+    { id: 2, nome: "🐱" },
+    { id: 3, nome: "🐭" },
+    { id: 4, nome: "🐹" }
+  ];
+  
+  // Estados
+  const [conjuntoA, setConjuntoA] = useState(
+    embaralhar(cartasIniciais.map(c => ({ ...c, achada: false })))
+  );
+  const [conjuntoB, setConjuntoB] = useState(
+    embaralhar(cartasIniciais.map(c => ({ ...c, achada: false })))
+  );
+  const [selecionadaA, setSelecionadaA] = useState(null);
+  const [selecionadaB, setSelecionadaB] = useState(null);
+  const [tentativas, setTentativas] = useState(5);
+  const [erro, setErro] = useState(false);
+  
+  // Verificações
+  const venceu = conjuntoA.every(c => c.achada);
+  const perdeu = tentativas === 0 && !venceu;
+  
+  // Funções
+  function selecionarA(carta) {
+    if (carta.achada || erro) return;
+    setSelecionadaA(carta);
+  }
+  
+  function selecionarB(carta) {
+    if (carta.achada || erro) return;
+    setSelecionadaB(carta);
+  }
+  
+  function validar() {
+    if (!selecionadaA || !selecionadaB) return;
+    
+    if (selecionadaA.id === selecionadaB.id) {
+      // Acertou
+      setConjuntoA(conjuntoA.map(c => 
+        c.id === selecionadaA.id ? { ...c, achada: true } : c
+      ));
+      setConjuntoB(conjuntoB.map(c => 
+        c.id === selecionadaB.id ? { ...c, achada: true } : c
+      ));
+      setSelecionadaA(null);
+      setSelecionadaB(null);
+    } else {
+      // Errou
+      setErro(true);
+      setTentativas(tentativas - 1);
+    }
+  }
+  
+  function tentarNovamente() {
+    setSelecionadaA(null);
+    setSelecionadaB(null);
+    setErro(false);
+  }
+  
+  return (
+    <div>
+      <h1>Jogo da Memória</h1>
+      <p>Tentativas: {tentativas}</p>
+      
+      {venceu && <h2>🎉 Você Venceu!</h2>}
+      {perdeu && <h2>😢 Você perdeu.</h2>}
+      
+      {/* Renderizar conjuntos */}
+      {/* Botão de validar */}
+      {/* Botão de tentar novamente */}
+    </div>
+  );
+}
+
+/**
+ * 🎰 JOGO DO 21
+ */
+function JogoVinteUm({ tentativas, listaCartas }) {
+  const [cartas, setCartas] = useState(
+    listaCartas.map(c => ({ ...c, virada: false }))
+  );
+  const [tentativasRestantes, setTentativasRestantes] = useState(tentativas);
+  const [pontuacao, setPontuacao] = useState(0);
+  const [jogoFinalizado, setJogoFinalizado] = useState(false);
+  
+  function virarCarta(id) {
+    if (jogoFinalizado || tentativasRestantes === 0) return;
+    
+    const cartaClicada = cartas.find(c => c.id === id);
+    if (cartaClicada.virada) return;
+    
+    // Atualiza cartas
+    const novasCartas = cartas.map(c =>
+      c.id === id ? { ...c, virada: true } : c
+    );
+    setCartas(novasCartas);
+    
+    // Atualiza pontuação
+    const novaPontuacao = pontuacao + cartaClicada.valor;
+    setPontuacao(novaPontuacao);
+    
+    // Diminui tentativas
+    const novasTentativas = tentativasRestantes - 1;
+    setTentativasRestantes(novasTentativas);
+    
+    // Verificações
+    if (novaPontuacao === 21) {
+      setJogoFinalizado(true);
+    } else if (novaPontuacao > 21) {
+      setJogoFinalizado(true);
+    } else if (novasTentativas === 0) {
+      setJogoFinalizado(true);
+    }
+  }
+  
+  return (
+    <div>
+      <h1>Jogo do 21</h1>
+      <p>Pontuação: {pontuacao}</p>
+      <p>Tentativas: {tentativasRestantes}</p>
+      
+      {cartas.map(carta => (
+        <button 
+          key={carta.id}
+          onClick={() => virarCarta(carta.id)}
+          disabled={carta.virada || jogoFinalizado}
+        >
+          {carta.virada ? carta.nome : "?"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 🎯 JOGO DA FORCA
+ */
+function JogoDaForca({ palavra }) {
+  const [letrasUsadas, setLetrasUsadas] = useState([]);
+  const [erros, setErros] = useState(0);
+  const [jogoFinalizado, setJogoFinalizado] = useState(false);
+  
+  const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const ganhou = palavra.split("").every(letra => letrasUsadas.includes(letra));
+  const perdeu = erros >= 6;
+  
+  function clicarLetra(letra) {
+    if (letrasUsadas.includes(letra) || jogoFinalizado) return;
+    
+    setLetrasUsadas([...letrasUsadas, letra]);
+    
+    if (!palavra.includes(letra)) {
+      const novosErros = erros + 1;
+      setErros(novosErros);
+      
+      if (novosErros >= 6) {
+        setJogoFinalizado(true);
+      }
+    }
+  }
+  
+  if (ganhou && !jogoFinalizado) {
+    setJogoFinalizado(true);
+  }
+  
+  return (
+    <div>
+      <h1>Jogo da Forca</h1>
+      
+      {/* Palavra com letras reveladas */}
+      <div>
+        {palavra.split("").map((letra, i) => (
+          <span key={i}>
+            {letrasUsadas.includes(letra) ? letra : "_"}
+          </span>
+        ))}
+      </div>
+      
+      <p>Erros: {erros} / 6</p>
+      
+      {ganhou && <h2>🎉 Você ganhou!</h2>}
+      {perdeu && <h2>😢 Você perdeu! Palavra: {palavra}</h2>}
+      
+      {/* Teclado */}
+      <div>
+        {alfabeto.map(letra => (
+          <button
+            key={letra}
+            onClick={() => clicarLetra(letra)}
+            disabled={letrasUsadas.includes(letra) || jogoFinalizado}
+          >
+            {letra}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// 7️⃣ PADRÕES E DICAS IMPORTANTES
+// ============================================================================
+
+/**
+ * PADRÃO: Inicializar estado com array de objetos
+ */
+function inicializarJogo() {
+  const dados = [1, 2, 3, 4];
+  const [itens, setItens] = useState(
+    dados.map(d => ({
+      id: d,
+      valor: 0,
+      ativo: false
+    }))
+  );
+}
+
+/**
+ * PADRÃO: Resetar jogo
+ */
+function JogoComReset() {
+  const estadoInicial = {
+    pontos: 0,
+    tentativas: 3,
+    finalizado: false
+  };
+  
+  const [estado, setEstado] = useState(estadoInicial);
+  
+  function resetar() {
+    setEstado(estadoInicial);
+  }
+  
+  return (
+    <div>
+      <button onClick={resetar}>Reiniciar Jogo</button>
+    </div>
+  );
+}
+
+/**
+ * PADRÃO: Validação antes de atualizar estado
+ */
+function mudarValorComValidacao(novoValor) {
+  const [valor, setValor] = useState(0);
+  
+  function mudar(novo) {
+    // Validações
+    if (novo < 0) novo = 0;
+    if (novo > 10) novo = 10;
+    
+    setValor(novo);
+  }
+}
+
+/**
+ * PADRÃO: Encontrar item em array
+ */
+function encontrarItem() {
+  const [itens, setItens] = useState([
+    { id: 1, nome: "A" },
+    { id: 2, nome: "B" }
+  ]);
+  
+  const itemEncontrado = itens.find(item => item.id === 2);
+  // itemEncontrado = { id: 2, nome: "B" }
+}
+
+/**
+ * PADRÃO: Atualizar um item específico em array
+ */
+function atualizarItemArray() {
+  const [itens, setItens] = useState([
+    { id: 1, ativo: false },
+    { id: 2, ativo: false }
+  ]);
+  
+  function ativarItem(id) {
+    const novosItens = itens.map(item => {
+      if (item.id === id) {
+        return { ...item, ativo: true };
+      }
+      return item;
+    });
+    setItens(novosItens);
+  }
+}
+
+// ============================================================================
+// 8️⃣ CHECKLIST PARA PROVA
+// ============================================================================
+
+/**
+ * ✅ ANTES DE COMEÇAR:
+ * 1. Ler TODA a questão
+ * 2. Identificar componentes necessários
+ * 3. Desenhar fluxo de dados
+ * 4. Começar pelo componente filho
+ * 
+ * ✅ DURANTE A PROVA:
+ * 1. Importar useState se necessário
+ * 2. Definir estados iniciais
+ * 3. Criar funções de manipulação
+ * 4. Montar o JSX
+ * 5. Testar cada parte
+ * 
+ * ❌ ERROS COMUNS A EVITAR:
+ * 1. Esquecer import { useState } from 'react'
+ * 2. Modificar estado diretamente
+ * 3. Esquecer key em listas
+ * 4. Colocar () em funções do onClick
+ * 5. Não validar antes de atualizar
+ */
+
+/**
+ * TEMPLATE BÁSICO PARA COMEÇAR QUALQUER EXERCÍCIO
+ */
+import { useState } from 'react';
+
+export default function MeuComponente() {
+  // 1. Estados
+  const [estado1, setEstado1] = useState(valorInicial);
+  
+  // 2. Funções
+  function minhaFuncao() {
+    // lógica aqui
+  }
+  
+  // 3. Variáveis derivadas
+  const valorCalculado = estado1 * 2;
+  
+  // 4. JSX
+  return (
+    <div>
+      <h1>Título do Componente</h1>
+      {/* conteúdo aqui */}
+    </div>
+  );
+}
+
+/**
+ * EXPORTAÇÕES ÚTEIS PARA IMPORTAR EM OUTROS ARQUIVOS
+ */
+export { embaralhar };
+
+// ============================================================================
+// FIM DO GUIA
+// ============================================================================
