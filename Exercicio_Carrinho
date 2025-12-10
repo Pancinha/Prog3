@@ -1,0 +1,147 @@
+import { useState, useEffect, useEffectEvent } from "react";
+import axios from "axios";
+
+export default function SistemaVendas() {
+  const [listaPedidos, setListaPedidos] = useState([])
+  const [pedidoSelecionado, setPedidoSelecionado] = useState(null)
+  const [listaClientes, setListaClientes] = useState([])
+  const [listaProdutos, setListaProdutos] = useState([])
+  const [dataPedido, setDataPedido] = useState("") //data sempre começar vazia
+  const [visualizaPedido, setVisualizaPedido] = useState(false)
+  const [cadastraCliente, setCadastraCliente] =useState(false)
+  const [carrinho, setCarrinho] = useState([])
+
+  async function carregarDados() {
+    const produtos = await axios.get("http://localhost:3000/produtos")
+    setListaProdutos(produtos.data)
+
+    const pedidos = await axios.get("http://localhost:3000/pedidos")
+    setListaPedidos(pedidos.data)
+
+    const clientes = await axios.get("http://localhost:3000/clientes")
+    setListaClientes(clientes.data);
+
+  }
+  useEffect(() => {
+    carregarDados();
+
+  }, [])
+
+  function aoSelecionarPedido(){
+    const idClicado = EventCounts.target.value;
+    const pedidoEncontrado = listaPedidos.find(pedido => pedido.id == idClicado);
+
+    setPedidoSelecionado(pedidoEncontrado);
+
+    console.log("Pedido selecionado: ", pedidoSelecionado)
+  }
+
+  async function novoCliente(){
+    // 1. PESCAR OS VALORES (Pelo ID do input)
+    const nomeDigitado = document.getElementById("nome").value;
+    const cidadeDigitada = document.getElementById("cidade").value;
+
+    // Validação simples
+    if (nomeDigitado === "" || cidadeDigitada === "") {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    // 2. FAZER O POST
+    await axios.post("http://localhost:3000/clientes", {
+        nome: nomeDigitado,
+        cidade: cidadeDigitada
+    });
+
+    // 3. ATUALIZAR A TELA (Essenciais!)
+    alert("Cliente cadastrado com sucesso!");
+    setCadastraCliente(false); // Fecha o modal
+    carregarDados(); // Recarrega a lista do select para o novo cliente aparecer
+
+  }
+  function adCarrinho(produtoClicado) {
+    // Pega tudo que já tem (...) e adiciona o novo
+    setCarrinho([...carrinho, produtoClicado]); 
+  }
+  
+  async function finalizaCompra(){
+    const idCliente = document.getElementById("select_cliente").value
+    const data = document.getElementById("data_pedido").value
+
+    // Validação básica
+    if (idCliente === "" || data === "" || carrinho.length === 0) {
+        alert("Preencha cliente, data e adicione produtos!");
+        return;
+    }
+
+    const novoPedido = {
+      cliente_id: cliente_id,
+      data_pedido: data,
+      // Aqui usamos o map para transformar a lista de OBJETOS PRODUTO em lista de IDs
+      produtos: carrinho.map(item => ({ produto_id: item.id }))
+    }
+    // 3. POST PEDIDO (Salva a venda)
+    await axios.post("http://localhost:3000/pedidos", novoPedido);
+  }
+
+  return(<>
+    <h1>Sistema de Vendas</h1>
+    <button onClick={() => setVisualizaPedido(true)}>Visualizar Pedido</button>
+    <dialog open={visualizaPedido}>
+      <h3>Visualizar Pedido</h3>
+      Selecione um pedido: <select onChange={aoSelecionarPedido}>
+        <option value="disable">Selecione um pedido</option>
+        {listaPedidos.map((pedido) => (
+          <option key={pedido.id} value={pedido.id}>ID: {pedido.id} - Data: {pedido.data_pedido}</option>
+        ))}
+      </select>
+
+      <h2>Dados do Cliente</h2>
+      <h3>Nome: </h3>
+      <h3>Data do Pedido: {pedidoSelecionado?.data_pedido}</h3>
+      <br />
+      <h2>Produtos</h2>
+      <table>
+        <tr>
+          <th>Nome</th>
+          <th>Valor(R$)</th>
+        </tr>
+      </table>
+      <br /><br />
+      <button onClick={() => setVisualizaPedido(false)}>Fechar</button>
+    </dialog>
+    <br /><br />
+
+    Selecione um cliente: <select id="select_cliente">
+      <option value="">Selecione o Cliente</option>
+      {listaClientes.map((cliente) => (
+        <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+      ))} 
+    </select>
+
+    <button onClick={() => setCadastraCliente(true)}>Cadastrar novo cliente</button>
+    <dialog open={cadastraCliente}>
+      <h2>Cadastrar Novo Cliente</h2>
+      Nome: <input type="text" name="" id="nome" />
+      Cidade: <input type="text" name="" id="cidade" />
+      <br />
+      <button onClick={() => novoCliente()} type="submit">Salvar</button>
+      <button onClick={()=> setCadastraCliente(false)}>Cancelar</button>
+    </dialog>
+    <br /><br />
+
+    Data do Pedido: <input type="date" name="" id="data_pedido" />
+
+    <h2>Carrinho</h2>
+    <p>Total: R${carrinho.reduce((soma, item) => soma + item.valor, 0)}</p>
+    <button onClick={() => {finalizaCompra()}}>Finalizar compra</button>
+
+    <h2>Produtos</h2>
+    <ul>
+      {listaProdutos.map((produto) => (
+        <li>{produto.nome} - {produto.valor} (Estoque: {produto.estoque}) <button onClick={() => {adCarrinho(produto)}}>Adicionar</button></li>
+      ))}
+    </ul>
+    
+  </>)
+}
