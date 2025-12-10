@@ -1,0 +1,87 @@
+import { useEffect, useState } from "react"
+import axios from "axios";
+
+//ESTADOS: lista_voos, voo_id, assentos
+
+export default function SistemaVoos(){
+  const [lista_voos, setListaVoos] = useState([])
+  const [voo_selecionado, setVooSelecionado] = useState(null)
+  const [assentos, setAssentos] = useState([])
+  const [tickets, setTickets] = useState([])
+
+  async function carregarDados() {
+    const buscaVoos = await axios.get("http://localhost:3000/voos")
+    setListaVoos(buscaVoos.data)
+
+    const buscaTickets = await axios.get("http://localhost:3000/tickets")
+    setTickets(buscaTickets.data)
+    
+  }
+  useEffect(()=>{
+    carregarDados();
+  }, [])
+
+  useEffect(()=>{
+    async function carregarAssentos() {
+      if (voo_selecionado!=null) {
+        const buscaAssentos = await axios.get("http://localhost:3000/assentos?voo_id=" +voo_selecionado)
+        setAssentos(buscaAssentos.data)
+      }
+    }
+    carregarAssentos();
+  },[voo_selecionado])
+
+  async function reservarAssento(id) {
+    const nome = document.getElementById("nome_cliente").value
+    const pacoteDados ={
+      cliente: nome,
+      assento_id: id
+    }
+    if (nome!= "") {
+      await axios.post("http://localhost:3000/tickets", pacoteDados)
+    }else{
+      alert("Insira um nome!")
+    }
+    carregarDados();
+  }
+
+
+  return (<>
+    <h2>Sistema de Agendamento de Voo</h2>
+    {/* MENU DINÂMICO COM MAP */}
+        <select onChange={(e) => setVooSelecionado(e.target.value)}>
+            <option value="">-- Selecione um Voo --</option>
+            
+            {/* Aqui a mágica acontece: transforma dados em opções */}
+            {lista_voos.map((voo) => (
+                <option key={voo.id} value={voo.id}>
+                    {voo.origem} para {voo.destino} ({voo.data})
+                </option>
+            ))}
+    </select>
+
+    {/*Aqui aparece depois de selecionado voo*/}
+    <h3>Voo Selecionado</h3>
+    <p>Origem:</p>
+    <br />
+    Nome do Cliente: <input type="text" id="nome_cliente" placeholder="Digite seu nome..." />
+
+    <h3>Selecione um assento</h3>
+    <div className="listaAssentos">
+      {assentos.map((assento) => (
+        <button style={{ backgroundColor: assento.ocupado === true ? "red" : "green" }} onClick={() => reservarAssento(assento.id)} key={assento.id}>{assento.poltrona}</button>
+      ))}
+    </div>
+
+
+    <br /><br />
+    <h4>Log de Tickets emitidos no sistema</h4>
+
+    <ul>
+      {tickets.map((ticket) => (
+        <li>Ticket ID: {ticket.id}   Cliente: {ticket.cliente}  Aseento: {ticket.assento_id}</li>
+      ))}
+  
+    </ul>
+    </>)
+}
