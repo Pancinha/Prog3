@@ -1,0 +1,215 @@
+import { useEffect, useState } from "react";
+import axios from 'axios'
+
+export default function gerenciamento_Turmas(){
+  const [listaTurmas, setListaTurmas] = useState([]);
+  const [digitaDiscplina, setDigitaDisciplina] = useState('');
+  const [digitaCurso, setDigitaCurso] = useState('');
+  const [digitaAlunos, setDigitaAlunos] = useState(0);
+  const [abreCadastro, setAbreCadastro] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [turma_edicao, setTurmaEdicao] = useState(0)
+
+  //CARREGANDO DADOS DA API
+  async function carregarDados(){
+    const turmas = await axios.get("http://localhost:3000/turmas")
+    setListaTurmas(turmas.data)
+  }
+  useEffect(() => {
+    carregarDados();
+  },[])
+
+  async function cadastrarTurma() {
+    setEditando(false)
+    console.log("ta em cadastrar")
+    const novaTurma = {
+      disciplina: digitaDiscplina,
+      curso: digitaCurso,
+      alunos: digitaAlunos
+    }
+    await axios.post("http://localhost:3000/turmas", novaTurma)
+    alert("Turma cadastrada com sucesso!")
+    setAbreCadastro(false)
+    carregarDados()
+  }
+
+  function prepararEdicao(turma) {
+    setEditando(true)
+    setDigitaDisciplina(turma.disciplina)
+    setDigitaCurso(turma.curso)
+    setDigitaAlunos(turma.alunos)
+    setTurmaEdicao(turma.id)
+
+    setAbreCadastro(true)
+  }
+
+  async function efetuaEdicao() {
+     const novosDados ={
+      disciplina: digitaDiscplina,
+      curso: digitaCurso,
+      alunos: digitaAlunos
+    }
+    
+    await axios.put("http://localhost:3000/turmas/"+ turma_edicao, novosDados)
+    alert("Edição efetuada!")
+    carregarDados();
+    
+  }
+
+  async function excluirTurmas(turma) {
+    if (turma.alunos == 0) {
+      window.confirm("Você deseja continuar a exclusão?")
+      await axios.delete("http://localhost:3000/turmas/"+ turma.id)
+      alert("Turmas excluída com sucesso!")
+      carregarDados()
+    }else{
+      alert("Turma possui mais de 0 alunos")
+    }
+  }
+  
+  async function zerarAlunos(turma){
+    const zerando ={
+      disciplina: turma.disciplina,
+      curso: turma.curso,
+      alunos: 0
+    }
+    await axios.put("http://localhost:3000/turmas/"+ turma.id, zerando)
+    setAbreCadastro(false)
+    alert("Numér de alunos zerado!")
+    carregarDados()
+  }
+
+  return(<>
+    <h1>Turmas</h1>
+    <br /><br />
+    <button onClick={() => setAbreCadastro(true)}>Cadastrar nova Turma</button>
+    <dialog open={abreCadastro}>
+      <h3>Cadastro</h3>
+      Disciplina: <input type="text" value={digitaDiscplina} onChange={(e) => setDigitaDisciplina(e.target.value)}/>
+      <br />
+      Curso: <select name="" id="" value={digitaCurso} onChange={(e) => setDigitaCurso(e.target.value)}>
+        <option value="eletrônica">Eletrônica</option>
+        <option value="informática">Informática</option>
+        <option value="lazer">lazer</option>
+      </select>
+      <br />
+      Número de alunos: <input type="number" value={digitaAlunos} onChange={(e) => setDigitaAlunos(e.target.value)}/>
+      <br /><br />
+      <button onClick={editando? efetuaEdicao : cadastrarTurma}>{editando? "Editar" : "Cadastrar"}</button>
+      <button onClick={() => setAbreCadastro(false)}>Fechar</button>
+    </dialog>
+    <br /><br />
+    <table border={1}>
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Disciplina</th>
+          <th>Curso</th>
+          <th>Alunos</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {listaTurmas.map((turma) => (
+          <tr>
+            <td>{turma.id}</td>
+            <td>{turma.disciplina}</td>
+            <td><img src={"/" + turma.curso + ".png"}/></td>
+            <td>{turma.alunos}</td>
+            <td>
+              <button onClick={() => prepararEdicao(turma)}>Editar</button>
+              <button onClick={() => zerarAlunos(turma)}>Zerar Alunos</button>
+              <button onClick={() => excluirTurmas(turma)}>Excluir</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>)
+}
+
+
+/*
+================================================================
+
+1. INPUT "ESPELHO" (Nunca usar getElementById):
+   <input value={nome} onChange={(e) => setNome(e.target.value)} />
+
+2. DIFERENÇA DE SALVAR (Lógica do ID):
+   - POST (Novo):  axios.post("http://.../turmas", objeto)
+   - PUT (Editar): axios.put("http://.../turmas/" + ID, objeto) 
+     >>> (NÃO ESQUECER A BARRA "/" E O ID NA URL DO PUT!) <<<
+
+3. PACOTE DE DADOS (Escopo):
+   Sempre crie a const dados = { ... } DENTRO da função que vai salvar.
+   Não tente usar variável de outra função. Use os ESTADOS.
+
+4. IMAGEM (String Mágica):
+   src={"/" + turma.curso.toLowerCase() + ".png"}
+
+5. BOTÃO DESABILITADO (Condição direta):
+   disabled={ turma.alunos === 0 } 
+   (Não precisa de ternário, só a comparação basta)
+
+6. VALIDAÇÃO (O If Porteiro):
+   if (turma.alunos > 0) { alert("Não pode!"); return; }
+
+7. FLUXO SAGRADO (CRIAR vs EDITAR):
+   
+   A) Botão "Novo" (Lá em cima): 
+      -> setEditando(null) + Limpar Inputs + Abrir
+
+   B) Botão "Editar" (Na Tabela): 
+      -> setEditando(turma.id) + Preencher Inputs + Abrir
+   
+   C) Botão "Salvar" (No Modal - O Cérebro):
+      -> Montar objeto: const dados = { ... }
+      -> IF (editando !== null) { 
+             axios.put(url + "/" + editando, dados) 
+         } ELSE { 
+             axios.post(url, dados) 
+         }
+
+================================================================
+
+
+1. CHECKBOX (Booleano - True/False):
+   <input 
+      type="checkbox" 
+      checked={estado}  // <-- USA CHECKED
+      onChange={(e) => setEstado(e.target.checked)} // <-- USA CHECKED
+   />
+
+2. RADIO BUTTON (Múltipla escolha visual):
+   <input 
+      type="radio"
+      value="opcao1"
+      checked={estado === "opcao1"} // <-- COMPARAÇÃO
+      onChange={(e) => setEstado(e.target.value)}
+   />
+
+3. TEXTAREA (Texto longo):
+   <textarea value={estado} onChange={(e) => setEstado(e.target.value)} />
+
+4. SELECT (Revisão):
+   <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+      <option value="valor1">Texto 1</option>
+   </select>
+
+
+
+5. SELECT VINDO DO SERVIDOS (MAP)
+
+<select value={estadoSelecionado} onChange={(e) => setEstadoSelecionado(e.target.value)}>
+   <option value="">Selecione um estado...</option>
+
+   {listaEstados.map((item) => (      
+  
+      <option key={item.id} value={item.id}>
+         {item.nome}
+      </option>
+      
+   ))}
+</select>
+
+*/
