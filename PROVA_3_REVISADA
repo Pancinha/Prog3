@@ -1,3 +1,8 @@
+//npm create vite@latest
+//npm install axios
+//npx json-server@0.17.4 baseTurmas.json
+//npm run dev
+
 import { useEffect, useState } from "react";
 import axios from 'axios'
 
