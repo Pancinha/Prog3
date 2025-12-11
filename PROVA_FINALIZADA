@@ -1,0 +1,149 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios';
+
+export default function Chamados(){
+  const [digitaDescricao, setDigitaDescricao] = useState('');
+  const [digitaPrioridade, setDigitaPrioridade] = useState(null);
+  const [selStatus, SetSelStatus] = useState(null);
+  const [listaChamados, setListaChamados] = useState([]);
+  const [cadastrando, setCadastrando] = useState(false);
+  const [editando, setEditando] = useState(false)
+  const [chamadoEditar, setChamadoEditar] = useState(null);
+  const [tratativa, setTratativa] =  useState(null)
+  const [excluir, setExcluir] = useState(false)
+  const [chamadoExcluir, setChamadoExcluir] = useState(null)
+
+  async function carregarDados() {
+    const chamados = await axios.get("http://localhost:3000/chamados")
+      setListaChamados(chamados.data)
+      }
+  useEffect(() => {
+        carregarDados();
+  },[])
+
+
+  function preparaEdicao(chamado){
+    setEditando(true)
+    setDigitaDescricao(chamado.descricao)
+    setDigitaPrioridade(chamado.prioridade)
+    SetSelStatus(chamado.status)
+    setChamadoEditar(chamado.id)
+
+    setCadastrando(true)
+  }
+
+  async function editarDados() {
+    console.log('Chegou no editar')
+    const novoChamado ={
+      descricao: digitaDescricao,
+      prioridade: digitaPrioridade,
+      status: selStatus
+    }
+    await axios.put("http://localhost:3000/chamados/"+ chamadoEditar, novoChamado )
+    setEditando(false)
+    alert("Edição efetuada")
+    carregarDados()
+    setEditando(false)
+    setCadastrando(false)
+    
+  }
+
+  async function cadastrarChamado(){
+    console.log('chegouaqui no cadastro')
+    const novoChamado ={
+      descricao: digitaDescricao,
+      prioridade: digitaPrioridade,
+      status: selStatus
+    }
+    console.log(novoChamado)
+    await axios.post("http://localhost:3000/chamados/", novoChamado)
+    alert("Novo chamado cadastrado")
+    carregarDados();
+    setCadastrando(false)
+  }
+
+   function verificaTratativa(chamado){
+    const status = chamado.status
+    if (status == "Aberto") {
+      setTratativa(true);
+    }if(status == "Em andamento"){
+      setTratativa(false);
+    }else{
+      setTratativa(null);
+    }
+  }
+
+  function excluirChamado(chamado){
+    setChamadoExcluir(chamado.id)
+    setExcluir(true)
+    if (chamado.status != "Concluído" && chamado.status != "Aberto") {
+      setExcluir(false)
+      alert("Chamado não pode ser finalizado!")
+    }
+  }
+
+  async function confirmarExclusão() {
+    await axios.delete("http://localhost:3000/chamados/" + chamadoExcluir)
+    alert("Chamado Excluído com sucesso!")
+    setExcluir(false)
+    carregarDados()
+  }
+
+
+  return(<>
+    <h1>Chamados</h1>
+    <button onClick={() => setCadastrando(true)}>Cadastrar Novo Chamado</button>
+    <dialog open={cadastrando}>
+      <h2>Cadastro</h2>
+      Descrição: <input type="text" value={digitaDescricao} onChange={(e) => setDigitaDescricao(e.target.value)} />
+      <br />
+      Prioridade (1 a 5): <input type="number" value={digitaPrioridade} onChange={(e) => setDigitaPrioridade(e.target.value)} />
+      <br />
+      Status: <select value={selStatus} onChange={(e) => SetSelStatus(e.target.value)}>
+        <option value="Aberto">Selecione uma opção</option>
+        <option value="Aberto">Aberto</option>
+        <option value="Em andamento">Em andamento</option>
+        <option value="Concluído">Concluído</option>
+      </select>
+      <br />
+      <button onClick={editando? editarDados : cadastrarChamado}>{editando ? "Editar" : "Cadastrar"}</button>
+      <button onClick={() => setCadastrando(false)}>Fechar</button>
+    </dialog>
+       <dialog open={excluir}>
+      <h2>Confirmar Exclusão</h2>
+      <br /><br />
+      <p>Tem certeza que deseja excluir  o chamado?</p>
+      <button onClick={() => confirmarExclusão()}>Confirmar e Excluir</button> <button onClick={() => setExcluir(false)}>Cancelar</button>
+    </dialog>
+    <br /><br />
+    <table border={1}>
+      <thead>
+        <tr>
+          <th>Imagem</th>
+          <th>Id</th>
+          <th>Descrição</th>
+          <th>Prioridade</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {listaChamados.map((chamado) => (
+          <tr>
+            <td><img src={"/" + chamado.prioridade + ".png"}/></td>
+            <td>{chamado.id}</td>
+            <td>{chamado.descricao}</td>
+            <td>{chamado.prioridade}</td>
+            <td>{chamado.status}</td>
+            <td>
+              <button onClick={() => preparaEdicao(chamado)}>Editar</button>
+              <button onClick={() => verificaTratativa(chamado)}>{tratativa? "Iniciar Tratativa" : "Finalizar Tratativa"}</button>
+              <button onClick={() => excluirChamado(chamado)}>Excluir</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>)
+
+}
