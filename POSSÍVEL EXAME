@@ -1,0 +1,91 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+export default function exame(){
+  const [exibeContatos, setExibeContatos] = useState(false);
+
+
+  return(<>
+    <div style={{color: '#165888', fontSize: '30px', fontWeight: 'bold'}}>
+      <dialog open={exibeContatos}>
+        <h2>Lista de Contatos</h2>
+        <ul style={{fontSize: '15px', fontWeight: 'normal'}}>
+          <li>Rafael - (51) 1928371983</li>
+          <li>Pedro - (51) 1928371983</li>
+          <li>José - (51) 1928371983</li>
+          <li>Lucas - (51) 1928371983</li>
+          <li>Maria - (51) 1928371983</li>
+          <li>Julia - (51) 1928371983</li>
+          <li>Gustavo - (51) 1928371983</li>
+        </ul>
+        <button style={{fontSize: '15px', 
+          fontWeight: 'normal', 
+          borderStyle: 'solid', 
+          borderColor: '#165888',
+          color: '#165888',
+          borderRadius: 'unset'}} onClick={() => setExibeContatos(false)}>Fechar</button>
+      </dialog>
+      
+      Nome<input style={{color: '#165888', 
+        width: '220px', height: '30px', 
+        marginLeft: '60px', 
+        borderStyle: 'solid', 
+        borderColor: '#165888'}} defaultValue={'nome ...'} type="text"/>
+      <br /><br />
+      E-mail<input style={{color: '#165888', 
+        width: '220px', 
+        height: '30px', 
+        marginLeft: '57px',  
+        borderStyle: 'solid', 
+        borderColor: '#165888'}} type="text" defaultValue={'e-mail...'}/>
+      <br /><br />
+      <table border={1} style={{color: 'grey', fontSize: '15px', width: '230px'}}>
+        <thead>
+          <tr>
+            <th>Telefone(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>(51) 986408283</td>
+          </tr>
+          <tr>
+            <td>(51) 986408283</td>
+          </tr>
+          <tr>
+            <td>(51) 986408283</td>
+          </tr>
+        </tbody>
+      </table>
+      <br /><br /><br /><br />
+
+      Telefone<input style={{color: '#165888', width: '220px', height: '30px', marginLeft: '60px', borderStyle: 'solid', borderColor: '#165888'}} defaultValue={'número...'} type="text"/>
+      <button style={{color: '#165888', 
+        borderStyle: 'solid', 
+        borderColor: '#165888',
+        marginLeft: '5px',
+        width: '140px',
+        fontSize: '15px',
+        borderStyle: 'solid',
+        borderRadius: 'unset'}}>Adicionar</button>
+      <br /><br />
+      <button style={{color: '#165888', 
+        borderStyle: 'solid', 
+        borderColor: '#165888',
+        marginLeft: '5px',
+        width: '180px',
+        fontSize: '15px',
+        borderStyle: 'solid',
+        borderRadius: 'unset'}}>Adicionar Contato</button>
+      <br /><br />
+      <button style={{color: '#165888', 
+        borderStyle: 'solid', 
+        borderColor: '#165888',
+        marginLeft: '5px',
+        width: '180px',
+        fontSize: '15px',
+        borderStyle: 'solid',
+        borderRadius: 'unset'}} onClick={() => setExibeContatos(true)}>Lista de Contatos</button>
+    </div>
+  </>)
+}
