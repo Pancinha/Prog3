@@ -217,4 +217,104 @@ export default function gerenciamento_Turmas(){
    ))}
 </select>
 
+
+-----------------------------------------------------------------------------------------------------------
+EXCLUIR CHAMADO
+
+const [chamadoParaExcluir, setChamadoParaExcluir] = useState(null); // Guarda o objeto todo
+
+// Ao clicar no botão excluir da tabela:
+function pedirExclusao(chamado) {
+   setChamadoParaExcluir(chamado); // Guarda TUDO (id, descricao, status...)
+   setModalExclusao(true);
+}
+
+// No Dialog:
+<dialog open={modalExclusao}>
+   {/* Verifica se existe para não dar erro de null */}
+   {chamadoParaExcluir && (
+      <p>
+         Deseja excluir o chamado <strong>{chamadoParaExcluir.id}</strong>: 
+         <br/> 
+         "{chamadoParaExcluir.descricao}"?
+      </p>
+   )}
+   <button onClick={confirmarDelete}>Sim</button>
+</dialog>
+
+************************************************************************
+MUDAR STATUS DE ACORDO COM O CLICK NO ATUAL
+
+async function avançarTratativa(chamado) {
+  let novoStatus = "";
+
+  // 1. Descobre qual o próximo passo
+  if (chamado.status === "Aberto") {
+      novoStatus = "Em andamento";
+  } else if (chamado.status === "Em andamento") {
+      novoStatus = "Concluído";
+  } else {
+      return; // Se já tá concluído, não faz nada
+  }
+
+  // 2. Monta o pacote só com a mudança
+  const atualizado = { ...chamado, status: novoStatus };
+
+  // 3. Manda pro servidor
+  await axios.put("http://localhost:3000/chamados/" + chamado.id, atualizado);
+  
+  // 4. Atualiza a tela
+  carregarDados();
+}
+
+
+<td>
+  <button 
+    onClick={() => avançarTratativa(chamado)}
+    disabled={chamado.status === "Concluído"} // Desabilita se acabou
+  >
+    {/* Texto muda sozinho baseado no status daquele chamado */}
+    {chamado.status === "Aberto" ? "Iniciar Tratativa" : 
+     chamado.status === "Em andamento" ? "Finalizar Tratativa" : 
+     "Concluído"}
+  </button>
+</td>
+*********************************************************************************
+IMAGENS DE ACORDO COM UMA CONDIÇÃO
+
+function getNomeImagem(prioridade) {
+  // Converte pra número pra garantir
+  const p = Number(prioridade);
+  
+  if (p <= 2) return "baixa.png";
+  if (p === 3) return "media.png";
+  if (p >= 4) return "alta.png";
+  return "media.png"; // Padrão
+}
+
+// Na Tabela:
+<img 
+  src={"/" + getNomeImagem(chamado.prioridade)} 
+  title={"Prioridade " + chamado.prioridade} // O professor pediu title!
+  alt="Ícone de prioridade" // O professor pediu alt!
+/>
+
+*************************************************************************
+BOTÃO DESABILITADO EM ALGUM CASO
+
+<button 
+  onClick={() => confirmarExclusao(chamado)} // Função que abre o modal
+  disabled={chamado.status === "Em andamento"} // BLOQUEIO VISUAL
+>
+  Excluir
+</button>
+
+
+
+
+
+
+
+
+
 */
